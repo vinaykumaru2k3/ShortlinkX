@@ -7,7 +7,7 @@ COPY shortlink-service/pom.xml shortlink-service/
 COPY api-gateway/pom.xml api-gateway/
 COPY common/src common/src
 COPY shortlink-service/src shortlink-service/src
-RUN mvn -f shortlink-service/pom.xml clean package -DskipTests
+RUN mvn clean package -pl shortlink-service -am -DskipTests
 
 # Stage 2: Run the application
 FROM eclipse-temurin:21-jre-jammy
