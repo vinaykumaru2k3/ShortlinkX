@@ -63,23 +63,94 @@ graph TD
 ## Getting Started
 
 ### Prerequisites
-* Docker & Docker Compose
-* Java 21 JDK (to compile locally)
-* Maven 3.9+
+* **Docker & Docker Compose** (Desktop/Engine v20.10+)
+* **Java 21 JDK** (to compile/run locally without containers)
+* **Node.js & npm** (optional, for running/developing the frontend locally)
+* **Maven 3.9+** (optional, wrapper `./mvnw` is included)
 
-### Running the Complete Stack
-1. Clone the repository:
+### Running the Complete Stack (Docker Compose)
+The entire multi-service system is orchestrated using Docker Compose. This starts all database engines, the Redis cache, backend services, and the Angular frontend.
+
+1. **Clone the repository**:
    ```bash
    git clone https://github.com/vinaykumaru2k3/ShortlinkX.git
    cd ShortlinkX
    ```
-2. Build and run via Docker Compose:
+
+2. **Boot the platform**:
    ```bash
    docker compose up --build
    ```
-3. Access components:
-   * **Frontend UI Dashboard**: `http://localhost:4200`
-   * **API Gateway & Swagger Docs**: `http://localhost:8080/swagger-ui.html`
+   *This command compiles the Java microservices, builds the Angular client inside an Nginx container, starts PostgreSQL instances for auth and link databases, provisions Redis, and links them all.*
+
+3. **Access Services**:
+   * **Frontend UI Dashboard**: [http://localhost:4200](http://localhost:4200) (routes calls automatically to the gateway)
+   * **API Gateway Service**: [http://localhost:8080](http://localhost:8080)
+   * **Swagger OpenAPI Documentation**: [http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html)
+   * **PostgreSQL (Auth DB)**: Port `5430` (DB name: `shortlink_auth`, username: `postgres`, password: `password`)
+   * **PostgreSQL (URL DB)**: Port `5431` (DB name: `shortlink_urls`, username: `postgres`, password: `password`)
+   * **Redis Cache Server**: Port `6379`
+
+---
+
+## Local Development & Component-Specific Execution
+
+### Backend Microservices
+If you wish to run backend services locally outside Docker:
+1. Spin up Postgres and Redis databases:
+   ```bash
+   docker compose up -d postgres-auth postgres-url redis
+   ```
+2. Start the API Gateway:
+   ```bash
+   cd api-gateway
+   ./../mvnw spring-boot:run
+   ```
+3. Start the ShortLink Service:
+   ```bash
+   cd shortlink-service
+   ./../mvnw spring-boot:run
+   ```
+
+### Frontend (Angular UI)
+To run the Angular SPA in development mode:
+1. Navigate to the frontend directory:
+   ```bash
+   cd frontend
+   ```
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+3. Start the local server:
+   ```bash
+   npm start
+   ```
+   *The client will start on [http://localhost:4200](http://localhost:4200) with hot-reloading enabled and will proxy API calls to the Gateway on `http://localhost:8080` automatically via `proxy.conf.json`.*
+
+---
+
+## Testing & Quality Assurance
+
+### Running JUnit Tests
+We use JUnit 5 and Mockito for unit and integration testing. Both backend modules (`api-gateway` and `shortlink-service`) are configured to run tests using an isolated H2 in-memory database to prevent test contamination.
+
+To execute the test suite:
+```bash
+./mvnw clean test
+```
+*This command cleans previous outputs, compiles all modules, and runs all unit & integration tests. The pipeline will output a `BUILD SUCCESS` report showing zero test failures.*
+
+---
+
+## Postman API Verification
+A pre-configured Postman collection is available at `postman/ShortLinkX.postman_collection.json`.
+
+### Importing and Running:
+1. Open Postman.
+2. Click **Import** and select the file [ShortLinkX.postman_collection.json](file:///d:/ShortLinkX/postman/ShortLinkX.postman_collection.json).
+3. The collection contains pre-configured requests for registering, logging in, shortening URLs, and retrieving history.
+4. **JWT Automation**: The `Login` request contains a test script that automatically extracts the returned JWT and saves it as a collection variable `jwt_token`. Subsequent requests pass this variable in the Authorization header (`Bearer {{jwt_token}}`) automatically.
 
 ---
 

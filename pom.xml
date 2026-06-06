@@ -57,6 +57,14 @@
                 <scope>runtime</scope>
             </dependency>
 
+            <!-- H2 for In-Memory Database Testing -->
+            <dependency>
+                <groupId>com.h2database</groupId>
+                <artifactId>h2</artifactId>
+                <version>2.2.224</version>
+                <scope>test</scope>
+            </dependency>
+
             <!-- Local Module Dependencies -->
             <dependency>
                 <groupId>com.link</groupId>
