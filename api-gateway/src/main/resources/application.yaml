@@ -1,0 +1,59 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/shortlink_auth
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: true
+
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+  cloud:
+    gateway:
+      routes:
+        - id: shortlink-service-shorten
+          uri: http://localhost:8081
+          predicates:
+            - Path=/api/v1/shorten, /api/v1/urls
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: shortlinkServiceCircuitBreaker
+                fallbackUri: forward:/fallback/shorten
+        - id: shortlink-service-redirect
+          uri: http://localhost:8081
+          predicates:
+            - Path=/api/v1/{shortCode}
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      shortlinkServiceCircuitBreaker:
+        slidingWindowSize: 10
+        permittedNumberOfCallsInHalfOpenState: 3
+        slidingWindowType: COUNT_BASED
+        minimumNumberOfCalls: 5
+        waitDurationInOpenState: 10s
+        failureRateThreshold: 50
+
+app:
+  jwt:
+    secret: mySuperDuperSecretKeyMustBeVeryLongToAvoidSecurityExceptionsAndNeedAtLeast256BitsOfEntropy!
+    expiration-ms: 86400000
