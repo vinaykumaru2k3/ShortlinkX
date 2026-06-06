@@ -31,7 +31,7 @@ The following system design shows how requests flow from the Client through the 
 flowchart TD
     Client[Angular Client Dashboard / REST API Client] -->|HTTP Requests| Gateway[api-gateway : Port 8080]
     
-    subgraph Edge Layer (api-gateway)
+    subgraph Edge_Layer ["Edge Layer (api-gateway)"]
         Gateway -->|Verify JWT| SecurityFilter[Spring Security WebFilter]
         Gateway -->|Trace Logging| CorrelationFilter[MDC Trace Filter]
         Gateway -->|Resilience & Failover| CircuitBreaker[Resilience4j Router]
@@ -40,11 +40,11 @@ flowchart TD
 
     SecurityFilter -->|Validate & Query| AuthDB[(PostgreSQL - Auth DB)]
     
-    subgraph Downstream Core Services
+    subgraph Downstream_Services ["Downstream Core Services"]
         CircuitBreaker -->|Propagates Identity Context: X-User-Id / X-Correlation-ID| ShortlinkService[shortlink-service : Port 8081]
     end
 
-    subgraph Storage & Caching Layer
+    subgraph Storage_Caching ["Storage & Caching Layer"]
         ShortlinkService -->|1. Sub-millisecond Redirect Lookup| RedisCache[(Redis Cache)]
         ShortlinkService -->|2. Database fallback / Link Write| UrlDB[(PostgreSQL - URL DB)]
         ShortlinkService -.->|3. Asynchronous click logging| AsyncWorker[Async Telemetry Worker Thread]
