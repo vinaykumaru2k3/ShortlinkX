@@ -29,7 +29,7 @@ spring:
     gateway:
       routes:
         - id: shortlink-service-shorten
-          uri: http://localhost:8081
+          uri: ${SHORTLINK_SERVICE_URI:http://localhost:8081}
           predicates:
             - Path=/api/v1/shorten, /api/v1/urls
           filters:
@@ -38,7 +38,7 @@ spring:
                 name: shortlinkServiceCircuitBreaker
                 fallbackUri: forward:/fallback/shorten
         - id: shortlink-service-redirect
-          uri: http://localhost:8081
+          uri: ${SHORTLINK_SERVICE_URI:http://localhost:8081}
           predicates:
             - Path=/api/v1/{shortCode}
 

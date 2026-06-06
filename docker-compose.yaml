@@ -1,0 +1,94 @@
+version: '3.8'
+
+services:
+  postgres-auth:
+    image: postgres:16-alpine
+    container_name: postgres-auth
+    environment:
+      POSTGRES_DB: shortlink_auth
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5430:5432"
+    volumes:
+      - postgres_auth_data:/var/lib/postgresql/data
+    networks:
+      - shortlink-network
+
+  postgres-url:
+    image: postgres:16-alpine
+    container_name: postgres-url
+    environment:
+      POSTGRES_DB: shortlink_urls
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5431:5432"
+    volumes:
+      - postgres_url_data:/var/lib/postgresql/data
+    networks:
+      - shortlink-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - shortlink-network
+
+  api-gateway:
+    build:
+      context: .
+      dockerfile: api-gateway/Dockerfile
+    container_name: api-gateway
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-auth:5432/shortlink_auth
+      - SPRING_DATA_REDIS_HOST=redis
+      - SHORTLINK_SERVICE_URI=http://shortlink-service:8081
+    depends_on:
+      - postgres-auth
+      - redis
+    networks:
+      - shortlink-network
+
+  shortlink-service:
+    build:
+      context: .
+      dockerfile: shortlink-service/Dockerfile
+    container_name: shortlink-service
+    ports:
+      - "8081:8081"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-url:5432/shortlink_urls
+      - SPRING_DATA_REDIS_HOST=redis
+    depends_on:
+      - postgres-url
+      - redis
+    networks:
+      - shortlink-network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: frontend
+    ports:
+      - "4200:80"
+    depends_on:
+      - api-gateway
+    networks:
+      - shortlink-network
+
+networks:
+  shortlink-network:
+    driver: bridge
+
+volumes:
+  postgres_auth_data:
+  postgres_url_data:
+  redis_data:
