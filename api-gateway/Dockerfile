@@ -10,7 +10,7 @@ COPY api-gateway/src api-gateway/src
 RUN mvn clean package -pl api-gateway -am -DskipTests
 
 # Stage 2: Run the application
-FROM eclipse-temurin:21-jre-jammy
+FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
 COPY --from=build /app/api-gateway/target/api-gateway-0.0.1-SNAPSHOT.jar app.jar
 EXPOSE 8080

@@ -10,7 +10,7 @@ COPY shortlink-service/src shortlink-service/src
 RUN mvn clean package -pl shortlink-service -am -DskipTests
 
 # Stage 2: Run the application
-FROM eclipse-temurin:21-jre-jammy
+FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
 COPY --from=build /app/shortlink-service/target/shortlink-service-0.0.1-SNAPSHOT.jar app.jar
 EXPOSE 8081
