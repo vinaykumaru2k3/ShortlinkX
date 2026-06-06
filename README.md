@@ -7,42 +7,86 @@ ShortLinkX is a production-grade, distributed microservice platform built to sho
 
 ---
 
-## Architecture Overview
+## Architecture Overview & System Design
 
-The system is structured as a Maven multi-module project comprising the following modules:
+ShortLinkX is designed following modern cloud-native architectural patterns. By splitting concerns into specialized services, the system guarantees high-performance URL redirection, secure multi-tenant isolation, and sub-millisecond API response latency.
+
+### 1. Multi-Module Project Topology
+The project is structured as a Maven reactor build, providing code separation and clean boundaries:
 
 ```
 ShortLinkX/
-  ├── common/             # Shared classes (DTOs, Exception models, Trace Filters)
-  ├── api-gateway/        # Edge Routing, Spring Security, JWT validation, Resilience4j, Rate Limiting
-  ├── shortlink-service/  # Core Business Logic, Base62 generation, PostgreSQL, Redis cache, Async Analytics
-  └── frontend/           # Angular 17+ Single-Page Application (SPA) dashboard client
-```
-
-### System Architecture Diagram
-```mermaid
-graph TD
-    Client[Angular UI / API Client] -->|Port 8080| Gateway[API Gateway & Auth Service]
-    Gateway -->|JWT Auth / Trace ID / Rate Limit| AuthDB[(PostgreSQL - Auth Schema)]
-    Gateway -->|Propagates Identity Context: X-User-Id| Service[ShortLink Service]
-    Service -->|Checks cache first| Redis[(Redis Cache)]
-    Service -->|Reads/Writes if cache miss| DB[(PostgreSQL - App Schema)]
-    Service -->|Asynchronously fires redirect logs| Async[Async Analytics Worker]
-    Async --> DB
+  ├── common/             # Shared library containing centralized DTO records, global exceptions, and interceptor contracts.
+  ├── api-gateway/        # Reactive edge gateway serving security, rate-limiting, Resilience4j circuit breaking, and user sign-in/registration.
+  ├── shortlink-service/  # Core business domain microservice managing short URL generation, Base62 logic, Redis caching, and async telemetry.
+  └── frontend/           # Angular SPA client dashboard styled with a modern glassmorphic theme.
 ```
 
 ---
 
-## Key Features
+### 2. High-Level Architecture Flow
+The following system design shows how requests flow from the Client through the Edge Gateway to downstream microservices and backing databases:
 
-1. **Edge Router & Security Gateway**: Central gateway on port `8080` intercepts all traffic, validates JWT authorization tokens, configures CORS/CSRF guards, and forwards requests.
-2. **Identity Header Propagation**: Once verified, the gateway extracts the caller's details and forwards them downstream to the microservices using secure custom headers (`X-User-Id`), keeping backend services stateless.
-3. **Link History per User**: Users can view their personalized list of generated URLs and telemetry data in the dashboard.
-4. **Log Tracing (Correlation IDs)**: Log tracing propagates a unique `X-Correlation-ID` MDC context from Gateway down to Services to ease debugging in production.
-5. **Sub-millisecond Redirections (Redis Cache)**: Caches `shortCode -> originalUrl` mappings in Redis with configurable TTL expirations.
-6. **Asynchronous Link Telemetry**: Redirection lookups immediately redirect the user, while tracking metrics (geography, referral, OS, browser) asynchronously in a non-blocking background thread.
-7. **Resilience & Fallbacks (Circuit Breaker)**: Utilizes Resilience4j on Gateway routes to automatically handle downstream microservice outages and fail gracefully.
-8. **Flyway Migrations**: Production-grade version-controlled SQL scripts define schema setups instead of unsafe Hibernate auto-generations.
+```mermaid
+flowchart TD
+    Client[Angular Client Dashboard / REST API Client] -->|HTTP Requests| Gateway[api-gateway : Port 8080]
+    
+    subgraph Edge Layer (api-gateway)
+        Gateway -->|Verify JWT| SecurityFilter[Spring Security WebFilter]
+        Gateway -->|Trace Logging| CorrelationFilter[MDC Trace Filter]
+        Gateway -->|Resilience & Failover| CircuitBreaker[Resilience4j Router]
+        Gateway -->|Rate Limiting| RedisLimiter[Reactive Redis Rate Limiter]
+    end
+
+    SecurityFilter -->|Validate & Query| AuthDB[(PostgreSQL - Auth DB)]
+    
+    subgraph Downstream Core Services
+        CircuitBreaker -->|Propagates Identity Context: X-User-Id / X-Correlation-ID| ShortlinkService[shortlink-service : Port 8081]
+    end
+
+    subgraph Storage & Caching Layer
+        ShortlinkService -->|1. Sub-millisecond Redirect Lookup| RedisCache[(Redis Cache)]
+        ShortlinkService -->|2. Database fallback / Link Write| UrlDB[(PostgreSQL - URL DB)]
+        ShortlinkService -.->|3. Asynchronous click logging| AsyncWorker[Async Telemetry Worker Thread]
+        AsyncWorker -->|Save OS/Browser/IP telemetry| UrlDB
+    end
+```
+
+---
+
+### 3. Detailed Data Flows & Core Lifecycles
+
+#### A. Creating a Shortened URL (Write Flow)
+1. **Authentication**: The client sends a `POST /api/v1/shorten` request with a JSON payload containing the original URL, accompanied by a `Authorization: Bearer <JWT>` header.
+2. **Gateway Verification**: The `api-gateway` intercepts the request:
+   - Validates the signature, integrity, and expiration of the JWT.
+   - Extracts the `userId` and `username` from the JWT claims.
+   - Injects the downstream identity headers `X-User-Id` and `X-User-Name`.
+   - Generates and attaches a unique `X-Correlation-ID` header if not present.
+3. **Service Logic**: The `shortlink-service` receives the request:
+   - Extracted headers associate the write request with the logged-in user.
+   - Converts the next autoincrement ID sequence from the database using a **Base62 Encoding** algorithm to generate the unique shortened code.
+   - Saves the mapping record to the `urls` table in PostgreSQL.
+   - Populates the Redis cache with the mapping (`shortCode` -> `originalUrl`) with a TTL of 7 days to accelerate future redirection requests.
+
+#### B. Resolving and Redirecting a Short URL (Read Flow)
+1. **Client GET**: A browser requests redirection via `GET /api/v1/{shortCode}` (exposed publicly through the gateway).
+2. **Sub-millisecond Cache Match**: The `shortlink-service` checks the Redis cache first:
+   - **Cache Hit**: Instantly retrieves the `originalUrl` from Redis.
+   - **Cache Miss**: If absent in Redis, it queries the database, updates the Redis cache for subsequent hits, and retrieves the URL.
+3. **Immediate HTTP 302**: The service returns a standard `302 Found` redirection header back to the browser immediately, minimizing user latency.
+4. **Asynchronous Telemetry Dispatch**: Simultaneously, the service spawns an asynchronous background worker using Spring's `@Async` thread executor:
+   - Resolves click details (IP address, User-Agent header, Operating System, Browser).
+   - Writes the telemetry event to the `analytics` database table without blocking the client's HTTP response stream.
+
+---
+
+### 4. Enterprise Architecture Features
+
+* **Distributed Database Pattern**: Follows the *Database-per-Service* microservice pattern. Authentication tables run in `postgres-auth` on port `5430`, while Shortcode/Analytics tables run in `postgres-url` on port `5431`. This eliminates database coupling.
+* **Identity Context Propagation**: Downstream microservices remain entirely stateless and decoupled from the security database. Downstream services do not validate tokens or run SQL queries to verify user roles; they trust the `X-User-Id` injected securely by the gateway.
+* **Observability (MDC Tracing)**: A custom gateway filter creates a unique correlation trace ID which is propagated across all downstream microservice HTTP boundaries. Logging configurations output this token inside their MDC (Mapped Diagnostic Context) blocks, making it simple to trace a request end-to-end across multiple containers.
+* **Schema Migration Control (Flyway)**: Database setups are fully versioned and automated. Flyway applies schema migration scripts (`V1`, `V2`, `V3`) on service startup, preventing schema drift across local, staging, and production environments.
 
 ---
 
