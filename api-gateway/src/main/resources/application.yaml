@@ -23,6 +23,9 @@ spring:
     enabled: true
     baseline-on-migrate: true
     baseline-version: 0
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/shortlink_auth}
+    user: postgres
+    password: postgres
 
   data:
     redis:
@@ -70,3 +73,7 @@ app:
   jwt:
     secret: mySuperDuperSecretKeyMustBeVeryLongToAvoidSecurityExceptionsAndNeedAtLeast256BitsOfEntropy!
     expiration-ms: 86400000
+
+logging:
+  level:
+    org.springframework.boot.autoconfigure: DEBUG

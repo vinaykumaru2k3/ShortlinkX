@@ -23,6 +23,9 @@ spring:
     enabled: true
     baseline-on-migrate: true
     baseline-version: 0
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/shortlinkx}
+    user: postgres
+    password: postgres
 
   data:
     redis:
