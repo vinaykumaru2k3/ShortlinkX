@@ -5,34 +5,34 @@
 
 :root {
   /* Core palette - Soft Dark */
-  --bg-base:     #1e1e1e;
-  --bg-surface:  #252526;
-  --bg-elevated: #2d2d30;
-  --bg-hover:    #333333;
+  --bg-base:     #222428;
+  --bg-surface:  #2a2c32;
+  --bg-elevated: #32353c;
+  --bg-hover:    #3a3d45;
 
   /* Soft green accent */
-  --accent:       #4ade80;
-  --accent-dim:   #22c55e;
-  --accent-muted: rgba(74, 222, 128, 0.1);
-  --accent-border: rgba(74, 222, 128, 0.3);
+  --accent:       #6ee7b7; /* softer pastel green */
+  --accent-dim:   #34d399;
+  --accent-muted: rgba(110, 231, 183, 0.1);
+  --accent-border: rgba(110, 231, 183, 0.3);
 
   /* Text */
-  --text-primary:   #d4d4d4;
-  --text-secondary: #9ca3af;
-  --text-muted:     #6b7280;
-  --text-accent:    #4ade80;
+  --text-primary:   #cbd5e1; /* softer white/gray */
+  --text-secondary: #94a3b8;
+  --text-muted:     #64748b;
+  --text-accent:    #6ee7b7;
 
   /* Borders */
-  --border:       #404040;
-  --border-focus: #4ade80;
+  --border:       #475569;
+  --border-focus: #6ee7b7;
 
   /* Semantic */
-  --error:        #f87171;
-  --error-bg:     rgba(248, 113, 113, 0.1);
-  --error-border: rgba(248, 113, 113, 0.3);
-  --success:      #4ade80;
-  --success-bg:   rgba(74, 222, 128, 0.1);
-  --success-border: rgba(74, 222, 128, 0.3);
+  --error:        #fca5a5; /* pastel red */
+  --error-bg:     rgba(252, 165, 165, 0.1);
+  --error-border: rgba(252, 165, 165, 0.3);
+  --success:      #6ee7b7;
+  --success-bg:   rgba(110, 231, 183, 0.1);
+  --success-border: rgba(110, 231, 183, 0.3);
 
   /* Typography */
   --font-mono: 'JetBrains Mono', 'Cascadia Code', 'Fira Code', monospace;

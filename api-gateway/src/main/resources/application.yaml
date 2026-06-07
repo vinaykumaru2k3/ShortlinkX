@@ -76,4 +76,10 @@ app:
 
 logging:
   level:
-    org.springframework.boot.autoconfigure: DEBUG
+    org.springframework.cloud.gateway: TRACE
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
