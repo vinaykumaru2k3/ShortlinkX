@@ -12,16 +12,19 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.nio.file.Files;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+
 @Configuration
+@ConditionalOnProperty(prefix = "spring.flyway", name = "enabled", matchIfMissing = true)
 public class FlywayConfig {
 
-    @Value("${spring.flyway.url}")
+    @Value("${spring.flyway.url:${spring.datasource.url:}}")
     private String url;
 
-    @Value("${spring.flyway.user}")
+    @Value("${spring.flyway.user:${spring.datasource.username:postgres}}")
     private String user;
 
-    @Value("${spring.flyway.password}")
+    @Value("${spring.flyway.password:${spring.datasource.password:postgres}}")
     private String password;
 
     @Bean(initMethod = "migrate")
