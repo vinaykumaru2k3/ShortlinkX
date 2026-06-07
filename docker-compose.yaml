@@ -14,12 +14,17 @@ services:
       - postgres_auth_data:/var/lib/postgresql/data
     networks:
       - shortlink-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d shortlink_auth"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   postgres-url:
     image: postgres:16-alpine
     container_name: postgres-url
     environment:
-      POSTGRES_DB: shortlink_urls
+      POSTGRES_DB: shortlinkx
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
     ports:
@@ -28,6 +33,11 @@ services:
       - postgres_url_data:/var/lib/postgresql/data
     networks:
       - shortlink-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d shortlinkx"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   redis:
     image: redis:7-alpine
@@ -38,6 +48,11 @@ services:
       - redis_data:/data
     networks:
       - shortlink-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   api-gateway:
     build:
@@ -51,8 +66,10 @@ services:
       - SPRING_DATA_REDIS_HOST=redis
       - SHORTLINK_SERVICE_URI=http://shortlink-service:8081
     depends_on:
-      - postgres-auth
-      - redis
+      postgres-auth:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     networks:
       - shortlink-network
 
@@ -64,11 +81,13 @@ services:
     ports:
       - "8081:8081"
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-url:5432/shortlink_urls
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-url:5432/shortlinkx
       - SPRING_DATA_REDIS_HOST=redis
     depends_on:
-      - postgres-url
-      - redis
+      postgres-url:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     networks:
       - shortlink-network
 
@@ -92,3 +111,4 @@ volumes:
   postgres_auth_data:
   postgres_url_data:
   redis_data:
+
