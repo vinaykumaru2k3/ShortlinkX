@@ -37,6 +37,10 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
                 .anyMatch(securedPath -> pathMatcher.match(securedPath, path));
 
         if (isSecured) {
+            if (request.getMethod() == org.springframework.http.HttpMethod.OPTIONS) {
+                return chain.filter(exchange);
+            }
+
             String authHeader = request.getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
             if (authHeader == null || !authHeader.startsWith("Bearer ")) {
                 return onError(exchange, "Missing or Invalid Authorization Header", HttpStatus.UNAUTHORIZED);

@@ -4,35 +4,35 @@
    ============================================================ */
 
 :root {
-  /* Core palette */
-  --bg-base:     #0a0a0a;
-  --bg-surface:  #111111;
-  --bg-elevated: #161616;
-  --bg-hover:    #1c1c1c;
+  /* Core palette - Soft Dark */
+  --bg-base:     #1e1e1e;
+  --bg-surface:  #252526;
+  --bg-elevated: #2d2d30;
+  --bg-hover:    #333333;
 
-  /* Phosphor green accent */
-  --accent:       #00ff88;
-  --accent-dim:   #00cc6a;
-  --accent-muted: rgba(0, 255, 136, 0.08);
-  --accent-border: rgba(0, 255, 136, 0.25);
+  /* Soft green accent */
+  --accent:       #4ade80;
+  --accent-dim:   #22c55e;
+  --accent-muted: rgba(74, 222, 128, 0.1);
+  --accent-border: rgba(74, 222, 128, 0.3);
 
   /* Text */
-  --text-primary:   #e8e8e8;
-  --text-secondary: #888888;
-  --text-muted:     #444444;
-  --text-accent:    #00ff88;
+  --text-primary:   #d4d4d4;
+  --text-secondary: #9ca3af;
+  --text-muted:     #6b7280;
+  --text-accent:    #4ade80;
 
   /* Borders */
-  --border:       #222222;
-  --border-focus: #00ff88;
+  --border:       #404040;
+  --border-focus: #4ade80;
 
   /* Semantic */
-  --error:        #ff4444;
-  --error-bg:     rgba(255, 68, 68, 0.08);
-  --error-border: rgba(255, 68, 68, 0.3);
-  --success:      #00ff88;
-  --success-bg:   rgba(0, 255, 136, 0.06);
-  --success-border: rgba(0, 255, 136, 0.25);
+  --error:        #f87171;
+  --error-bg:     rgba(248, 113, 113, 0.1);
+  --error-border: rgba(248, 113, 113, 0.3);
+  --success:      #4ade80;
+  --success-bg:   rgba(74, 222, 128, 0.1);
+  --success-border: rgba(74, 222, 128, 0.3);
 
   /* Typography */
   --font-mono: 'JetBrains Mono', 'Cascadia Code', 'Fira Code', monospace;
