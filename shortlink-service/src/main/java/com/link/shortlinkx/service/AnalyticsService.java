@@ -20,7 +20,7 @@ public class AnalyticsService {
     private final AnalyticsRepository analyticsRepository;
     private final UrlRepository urlRepository;
 
-    @Async
+    @Async("taskExecutor")
     @Transactional
     public void recordClick(String shortCode, String ipAddress, String referrer, String userAgent) {
         log.info("Asynchronously logging click telemetry and incrementing count for shortCode: {}", shortCode);

@@ -6,3 +6,6 @@ CREATE TABLE urls (
     user_id BIGINT DEFAULT 0,
     created_at TIMESTAMP NOT NULL
 );
+
+CREATE INDEX idx_urls_user_id ON urls (user_id);
+CREATE INDEX idx_urls_created_at ON urls (created_at DESC);

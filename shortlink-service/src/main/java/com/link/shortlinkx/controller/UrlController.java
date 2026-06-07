@@ -28,11 +28,10 @@ public class UrlController {
     @Operation(summary = "Shorten a URL", description = "Creates a base62 shortcode for the given original long URL and associates it with the authenticated user ID forwarded by the gateway.")
     public ResponseEntity<ShortUrlResponse> shorten(
             @RequestBody @Valid CreateShortUrlRequest request,
-            @RequestHeader(value = "X-User-Id", required = false) Long userId) {
+            @RequestHeader("X-User-Id") Long userId) {
 
-        Long effectiveUserId = (userId != null) ? userId : 0L;
         return ResponseEntity.ok(
-                urlService.shortenUrl(request, effectiveUserId)
+                urlService.shortenUrl(request, userId)
         );
     }
 

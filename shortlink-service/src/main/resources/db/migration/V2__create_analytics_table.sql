@@ -8,3 +8,5 @@ CREATE TABLE analytics (
     operating_system VARCHAR(50),
     browser VARCHAR(50)
 );
+
+CREATE INDEX idx_analytics_short_code ON analytics (short_code);

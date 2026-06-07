@@ -30,18 +30,29 @@ public class UrlServiceImpl implements UrlService {
 
     private static final String CACHE_KEY_PREFIX = "url:";
 
+    private static final int MAX_RETRIES = 10;
+
     @Override
     @Transactional
     public ShortUrlResponse shortenUrl(CreateShortUrlRequest request, Long userId) {
-        String shortCode;
-        int retries = 0;
-        do {
-            shortCode = Base62Encoder.generateRandomCode(6);
-            retries++;
-            if (retries > 5) {
-                shortCode = Base62Encoder.generateRandomCode(8);
+        String shortCode = null;
+        int length = 6;
+
+        for (int retries = 0; retries < MAX_RETRIES; retries++) {
+            // Escalate to 8-char codes after 5 failed attempts on 6-char codes
+            if (retries == 5) {
+                length = 8;
             }
-        } while (urlRepository.existsByShortCode(shortCode));
+            String candidate = Base62Encoder.generateRandomCode(length);
+            if (!urlRepository.existsByShortCode(candidate)) {
+                shortCode = candidate;
+                break;
+            }
+        }
+
+        if (shortCode == null) {
+            throw new RuntimeException("Failed to generate a unique short code after " + MAX_RETRIES + " attempts.");
+        }
 
         Url urlEntity = Url.builder()
                 .originalUrl(request.url())
