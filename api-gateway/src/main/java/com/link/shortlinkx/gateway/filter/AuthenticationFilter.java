@@ -50,6 +50,10 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
             Long userId = jwtUtils.getUserIdFromToken(token);
             String username = jwtUtils.getUsernameFromToken(token);
 
+            if (userId == null) {
+                return onError(exchange, "JWT is missing userId claim", HttpStatus.UNAUTHORIZED);
+            }
+
             // Mutate request headers to propagate identity context downstream
             ServerHttpRequest mutatedRequest = request.mutate()
                     .header("X-User-Id", String.valueOf(userId))

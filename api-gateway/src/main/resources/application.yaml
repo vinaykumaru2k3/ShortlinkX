@@ -5,6 +5,9 @@ spring:
   application:
     name: api-gateway
 
+  main:
+    web-application-type: reactive
+
   datasource:
     url: jdbc:postgresql://localhost:5432/shortlink_auth
     username: postgres
@@ -31,12 +34,21 @@ spring:
         - id: shortlink-service-shorten
           uri: ${SHORTLINK_SERVICE_URI:http://localhost:8081}
           predicates:
-            - Path=/api/v1/shorten, /api/v1/urls
+            - Path=/api/v1/shorten
           filters:
             - name: CircuitBreaker
               args:
                 name: shortlinkServiceCircuitBreaker
                 fallbackUri: forward:/fallback/shorten
+        - id: shortlink-service-urls
+          uri: ${SHORTLINK_SERVICE_URI:http://localhost:8081}
+          predicates:
+            - Path=/api/v1/urls
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: shortlinkServiceCircuitBreaker
+                fallbackUri: forward:/fallback/urls
         - id: shortlink-service-redirect
           uri: ${SHORTLINK_SERVICE_URI:http://localhost:8081}
           predicates:
