@@ -51,21 +51,21 @@ export class LoginComponent {
         },
         error: (err) => {
           this.isLoading = false;
-          this.errorMessage = err.error || 'Invalid username or password';
+          this.errorMessage = err.error?.message || err.error?.error || 'Invalid username or password';
         }
       });
     } else {
       this.authService.register(this.username, this.email, this.password).subscribe({
-        next: () => {
+        next: (res) => {
           this.isLoading = false;
-          this.successMessage = 'Registration successful! Please sign in.';
+          this.successMessage = res?.message || 'Registration successful! Please sign in.';
           this.isLoginMode = true;
           this.email = '';
           this.password = '';
         },
         error: (err) => {
           this.isLoading = false;
-          this.errorMessage = err.error || 'Registration failed';
+          this.errorMessage = err.error?.message || err.error?.error || 'Registration failed. Please try again.';
         }
       });
     }

@@ -14,7 +14,7 @@ export interface AuthResponse {
 export class AuthService {
   private apiUrl = 'http://localhost:8080/api/v1/auth';
   private loggedInSubject = new BehaviorSubject<boolean>(this.hasToken());
-  
+
   public isLoggedIn$ = this.loggedInSubject.asObservable();
 
   constructor(private http: HttpClient) {}
@@ -23,14 +23,14 @@ export class AuthService {
     return !!localStorage.getItem('token');
   }
 
-  register(username: string, email: string, password: String): Observable<string> {
-    return this.http.post(`${this.apiUrl}/register`, { username, email, password }, { responseType: 'text' });
+  register(username: string, email: string, password: string): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/register`, { username, email, password });
   }
 
-  login(username: string, password: String): Observable<AuthResponse> {
+  login(username: string, password: string): Observable<AuthResponse> {
     return this.http.post<AuthResponse>(`${this.apiUrl}/login`, { username, password })
       .pipe(
-        tap(response => {
+        tap((response: AuthResponse) => {
           localStorage.setItem('token', response.token);
           localStorage.setItem('username', response.username);
           localStorage.setItem('userId', String(response.userId));

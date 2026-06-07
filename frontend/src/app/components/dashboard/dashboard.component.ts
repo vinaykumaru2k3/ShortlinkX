@@ -16,12 +16,16 @@ export class DashboardComponent implements OnInit {
   longUrl = '';
   username = '';
   history: ShortUrlResponse[] = [];
-  
+
   isLoading = false;
   errorMessage = '';
   successMessage = '';
-  
+
   copiedIndex: number | null = null;
+
+  get totalClicks(): number {
+    return this.history.reduce((sum, url) => sum + (url.clickCount ?? 0), 0);
+  }
 
   constructor(
     private authService: AuthService,
