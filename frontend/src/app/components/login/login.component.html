@@ -27,7 +27,7 @@
 
     <!-- Session line -->
     <div class="term-session-line">
-      <span class="prompt-user">user</span><span class="prompt-at">@</span><span class="prompt-host">shortlinkx</span><span class="prompt-sep">:~$</span>
+      <span class="prompt-user">user</span><span class="prompt-at">&#64;</span><span class="prompt-host">shortlinkx</span><span class="prompt-sep">:~$</span>
       <span class="prompt-cmd">{{ isLoginMode ? 'auth --mode=login' : 'auth --mode=register' }}</span>
     </div>
 
@@ -76,7 +76,7 @@
               name="email"
               class="term-input"
               [(ngModel)]="email"
-              placeholder="user@domain.com"
+              placeholder="user&#64;domain.com"
               required
               autocomplete="email" />
           </div>
