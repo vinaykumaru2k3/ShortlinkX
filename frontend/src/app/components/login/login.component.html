@@ -1,0 +1,133 @@
+<div class="term-root">
+
+  <!-- ASCII banner / logo -->
+  <div class="term-logo">
+    <pre class="ascii-art">
+  ____  _               _   _     _       _    __  __
+ / ___|| |__   ___  _ __| |_| |   (_)_ __ | | _\ \/ /
+ \___ \| '_ \ / _ \| '__| __| |   | | '_ \| |/ /\  /
+  ___) | | | | (_) | |  | |_| |___| | | | |   &lt;  /  \
+ |____/|_| |_|\___/|_|   \__|_____|_|_| |_|_|\_\/_/\_\</pre>
+    <p class="tagline">// enterprise url shortener — terminal edition</p>
+  </div>
+
+  <!-- Terminal card -->
+  <div class="term-card">
+
+    <!-- Window chrome -->
+    <div class="term-titlebar">
+      <div class="term-dots">
+        <span class="dot dot-close"></span>
+        <span class="dot dot-min"></span>
+        <span class="dot dot-max"></span>
+      </div>
+      <span class="term-title">{{ isLoginMode ? 'auth::login' : 'auth::register' }}</span>
+      <span class="term-pid">pid://shortlinkx</span>
+    </div>
+
+    <!-- Session line -->
+    <div class="term-session-line">
+      <span class="prompt-user">user</span><span class="prompt-at">&#64;</span><span class="prompt-host">shortlinkx</span><span class="prompt-sep">:~$</span>
+      <span class="prompt-cmd">{{ isLoginMode ? 'auth --mode=login' : 'auth --mode=register' }}</span>
+    </div>
+
+    <div class="term-body">
+      <!-- Alert: error -->
+      <div class="term-alert alert-error" *ngIf="errorMessage">
+        <span class="alert-prefix">✗ ERR —</span> {{ errorMessage }}
+      </div>
+
+      <!-- Alert: success -->
+      <div class="term-alert alert-success" *ngIf="successMessage">
+        <span class="alert-prefix">✓ OK  —</span> {{ successMessage }}
+      </div>
+
+      <form (ngSubmit)="onSubmit()" #authForm="ngForm" autocomplete="off" novalidate>
+
+        <!-- Username -->
+        <div class="field-group">
+          <label class="field-label" for="username">
+            <span class="label-prefix">→</span> username
+          </label>
+          <div class="input-line">
+            <span class="input-prompt">$</span>
+            <input
+              type="text"
+              id="username"
+              name="username"
+              class="term-input"
+              [(ngModel)]="username"
+              placeholder="enter_username"
+              required
+              autocomplete="username" />
+          </div>
+        </div>
+
+        <!-- Email (register only) -->
+        <div class="field-group" *ngIf="!isLoginMode">
+          <label class="field-label" for="email">
+            <span class="label-prefix">→</span> email
+          </label>
+          <div class="input-line">
+            <span class="input-prompt">$</span>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              class="term-input"
+              [(ngModel)]="email"
+              placeholder="user&#64;domain.com"
+              required
+              autocomplete="email" />
+          </div>
+        </div>
+
+        <!-- Password -->
+        <div class="field-group">
+          <label class="field-label" for="password">
+            <span class="label-prefix">→</span> password
+          </label>
+          <div class="input-line">
+            <span class="input-prompt">$</span>
+            <input
+              type="password"
+              id="password"
+              name="password"
+              class="term-input"
+              [(ngModel)]="password"
+              placeholder="••••••••••••"
+              required
+              autocomplete="current-password" />
+          </div>
+        </div>
+
+        <!-- Submit -->
+        <button type="submit" class="term-btn" [disabled]="isLoading" id="auth-submit-btn">
+          <span class="btn-prompt">$</span>
+          <span class="btn-label" *ngIf="!isLoading">{{ isLoginMode ? 'exec authenticate' : 'exec register' }}</span>
+          <span class="btn-loading" *ngIf="isLoading">processing<span class="dots">...</span></span>
+        </button>
+
+      </form>
+
+      <!-- Mode toggle -->
+      <div class="term-footer">
+        <span class="footer-comment"># {{ isLoginMode ? 'no account?' : 'already registered?' }}</span>
+        <button type="button" class="term-link-btn" (click)="toggleMode()" id="auth-toggle-btn">
+          {{ isLoginMode ? 'auth --mode=register' : 'auth --mode=login' }}
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- System status line -->
+  <div class="term-statusbar">
+    <span class="status-item">api: localhost:8080</span>
+    <span class="status-sep">|</span>
+    <span class="status-item">env: production</span>
+    <span class="status-sep">|</span>
+    <span class="status-item status-ok">● online</span>
+  </div>
+
+</div>

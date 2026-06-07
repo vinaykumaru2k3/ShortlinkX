@@ -1,0 +1,300 @@
+/* ============================================================
+   LOGIN — TERMINAL THEME
+   ============================================================ */
+
+.term-root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  padding: 32px 16px;
+  background-color: var(--bg-base);
+}
+
+/* ── ASCII Logo ── */
+.term-logo {
+  text-align: center;
+}
+
+.ascii-art {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  line-height: 1.2;
+  color: var(--accent);
+  white-space: pre;
+  letter-spacing: 0;
+  user-select: none;
+}
+
+.tagline {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 8px;
+  font-style: italic;
+}
+
+/* ── Terminal Card ── */
+.term-card {
+  width: 100%;
+  max-width: 520px;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border);
+}
+
+/* ── Title Bar (fake window chrome) ── */
+.term-titlebar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background-color: var(--bg-elevated);
+  border-bottom: 1px solid var(--border);
+}
+
+.term-dots {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: block;
+}
+
+.dot-close  { background-color: #ff5f57; }
+.dot-min    { background-color: #febc2e; }
+.dot-max    { background-color: #28c840; }
+
+.term-title {
+  flex: 1;
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  letter-spacing: 0.05em;
+}
+
+.term-pid {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+}
+
+/* ── Session line ── */
+.term-session-line {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  padding: 10px 16px;
+  background-color: var(--bg-elevated);
+  border-bottom: 1px solid var(--border);
+  font-size: 0.8rem;
+  overflow-x: auto;
+  white-space: nowrap;
+}
+
+.prompt-user   { color: var(--accent); font-weight: 600; }
+.prompt-at     { color: var(--text-muted); }
+.prompt-host   { color: var(--accent-dim); }
+.prompt-sep    { color: var(--text-muted); margin-right: 6px; }
+.prompt-cmd    { color: var(--text-primary); }
+
+/* ── Body ── */
+.term-body {
+  padding: 24px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ── Alerts ── */
+.term-alert {
+  padding: 10px 14px;
+  font-size: 0.8rem;
+  border-left: 3px solid;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  word-break: break-word;
+}
+
+.alert-error {
+  background-color: var(--error-bg);
+  border-color: var(--error);
+  color: var(--error);
+}
+
+.alert-success {
+  background-color: var(--success-bg);
+  border-color: var(--success);
+  color: var(--success);
+}
+
+.alert-prefix {
+  font-weight: 700;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* ── Form fields ── */
+.field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.field-label {
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+  text-transform: lowercase;
+  letter-spacing: 0.08em;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.label-prefix {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.input-line {
+  display: flex;
+  align-items: center;
+  border: 1px solid var(--border);
+  background-color: var(--bg-base);
+}
+
+.input-line:focus-within {
+  border-color: var(--accent);
+}
+
+.input-prompt {
+  padding: 0 10px;
+  color: var(--accent);
+  font-size: 0.9rem;
+  font-weight: 700;
+  user-select: none;
+  border-right: 1px solid var(--border);
+  align-self: stretch;
+  display: flex;
+  align-items: center;
+}
+
+.term-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  padding: 10px 12px;
+  caret-color: var(--accent);
+  width: 100%;
+}
+
+.term-input::placeholder {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+/* ── Submit button ── */
+.term-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 12px 16px;
+  background-color: var(--accent-muted);
+  border: 1px solid var(--accent-border);
+  color: var(--accent);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  letter-spacing: 0.05em;
+  margin-top: 4px;
+}
+
+.term-btn:hover:not(:disabled) {
+  background-color: var(--accent);
+  color: var(--bg-base);
+  border-color: var(--accent);
+}
+
+.term-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.btn-prompt {
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.btn-loading {
+  color: var(--text-secondary);
+}
+
+.dots {
+  letter-spacing: 0.1em;
+}
+
+/* ── Footer / toggle ── */
+.term-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-top: 4px;
+  border-top: 1px solid var(--border);
+}
+
+.footer-comment {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.term-link-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--accent);
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  cursor: pointer;
+  text-align: left;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.term-link-btn:hover {
+  color: var(--accent-dim);
+}
+
+/* ── Status bar ── */
+.term-statusbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.65rem;
+  color: var(--text-muted);
+}
+
+.status-sep { color: var(--border); }
+.status-ok  { color: var(--accent); }
+
+/* ── Responsive ── */
+@media (max-width: 540px) {
+  .ascii-art {
+    font-size: 0.38rem;
+  }
+
+  .term-card {
+    width: 100%;
+  }
+}

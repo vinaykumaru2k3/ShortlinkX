@@ -1,0 +1,159 @@
+<div class="dash-root">
+
+  <!-- ── Top Nav ── -->
+  <header class="dash-nav">
+    <div class="nav-logo">
+      <span class="logo-bracket">[</span>
+      <span class="logo-text">ShortLink<span class="logo-x">X</span></span>
+      <span class="logo-bracket">]</span>
+    </div>
+
+    <div class="nav-session">
+      <span class="session-prefix"># session:</span>
+      <span class="session-user">{{ username }}</span>
+    </div>
+
+    <button class="nav-logout-btn" (click)="logout()" id="logout-btn">
+      <span>exit</span>
+      <span class="logout-icon">→</span>
+    </button>
+  </header>
+
+  <!-- ── Main ── -->
+  <main class="dash-main">
+
+    <!-- ── Stats bar ── -->
+    <div class="stats-bar">
+      <div class="stat-item">
+        <span class="stat-label">total_links</span>
+        <span class="stat-value">{{ history.length }}</span>
+      </div>
+      <div class="stat-sep">|</div>
+      <div class="stat-item">
+        <span class="stat-label">total_clicks</span>
+        <span class="stat-value">{{ totalClicks }}</span>
+      </div>
+      <div class="stat-sep">|</div>
+      <div class="stat-item">
+        <span class="stat-label">status</span>
+        <span class="stat-value stat-ok">● active</span>
+      </div>
+    </div>
+
+    <!-- ── Shorten section ── -->
+    <section class="term-section">
+      <div class="section-header">
+        <span class="section-prompt">shortlinkx&#64;api:~$</span>
+        <span class="section-cmd">shorten --new-url</span>
+      </div>
+
+      <!-- Alerts -->
+      <div class="term-alert alert-error" *ngIf="errorMessage" role="alert">
+        <span class="alert-prefix">✗ ERR —</span> {{ errorMessage }}
+      </div>
+      <div class="term-alert alert-success" *ngIf="successMessage" role="alert">
+        <span class="alert-prefix">✓ OK  —</span> {{ successMessage }}
+      </div>
+
+      <form (ngSubmit)="onSubmit()" #shortenForm="ngForm" class="shorten-form" novalidate>
+        <div class="cmd-input-row">
+          <span class="cmd-flag">--url=</span>
+          <input
+            type="url"
+            name="longUrl"
+            id="shorten-input"
+            class="cmd-url-input"
+            [(ngModel)]="longUrl"
+            placeholder="https://your-very-long-url.com/path/to/page"
+            required />
+          <button
+            type="submit"
+            class="cmd-exec-btn"
+            [disabled]="isLoading"
+            id="shorten-btn">
+            <span *ngIf="!isLoading">exec</span>
+            <span *ngIf="isLoading">...</span>
+          </button>
+        </div>
+      </form>
+    </section>
+
+    <!-- ── History section ── -->
+    <section class="term-section">
+      <div class="section-header">
+        <span class="section-prompt">shortlinkx&#64;api:~$</span>
+        <span class="section-cmd">ls -la ./links/</span>
+        <span class="section-count"># {{ history.length }} entries</span>
+      </div>
+
+      <!-- Empty state -->
+      <div class="empty-state" *ngIf="history.length === 0 && !isLoading">
+        <span class="empty-prefix">&gt;</span>
+        <span>no links found. run <code>shorten --new-url</code> to create one.</span>
+      </div>
+
+      <!-- Table -->
+      <div class="table-wrapper" *ngIf="history.length > 0">
+        <table class="link-table">
+          <thead>
+            <tr>
+              <th class="col-idx">#</th>
+              <th class="col-code">short_code</th>
+              <th class="col-url">original_url</th>
+              <th class="col-clicks">clicks</th>
+              <th class="col-action">action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let url of history; let i = index" class="link-row">
+              <!-- Index -->
+              <td class="col-idx cell-muted">{{ i + 1 }}</td>
+
+              <!-- Short code -->
+              <td class="col-code">
+                <a [href]="url.shortUrl" target="_blank" class="code-link" [title]="url.shortUrl">
+                  /{{ url.shortCode }}
+                </a>
+              </td>
+
+              <!-- Original URL -->
+              <td class="col-url">
+                <span class="url-text" [title]="url.originalUrl">{{ url.originalUrl }}</span>
+              </td>
+
+              <!-- Click count -->
+              <td class="col-clicks">
+                <span class="click-val" [class.clicks-zero]="url.clickCount === 0">
+                  {{ url.clickCount }}
+                </span>
+              </td>
+
+              <!-- Copy -->
+              <td class="col-action">
+                <button
+                  class="copy-btn"
+                  [class.copy-done]="copiedIndex === i"
+                  (click)="copyToClipboard(url.shortUrl, i)"
+                  [attr.id]="'copy-btn-' + i">
+                  <span *ngIf="copiedIndex !== i">cp</span>
+                  <span *ngIf="copiedIndex === i">✓</span>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ── Footer ── -->
+  <footer class="dash-footer">
+    <span>shortlinkx v1.0.0</span>
+    <span class="footer-sep">|</span>
+    <span>powered by spring boot + angular</span>
+    <span class="footer-sep">|</span>
+    <span class="footer-accent">© 2026</span>
+  </footer>
+
+</div>
