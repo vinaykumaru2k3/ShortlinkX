@@ -1,7 +1,9 @@
 package com.link.shortlinkx.exception;
 
 import com.link.shortlinkx.tracing.TraceConstants;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
+import org.springframework.web.ErrorResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -14,6 +16,7 @@ import java.time.LocalDateTime;
 import java.util.stream.Collectors;
 
 @RestControllerAdvice
+@Slf4j
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(ResourceNotFoundException.class)
@@ -55,9 +58,20 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorDetails> handleGlobalException(Exception ex, WebRequest request) {
+        // Framework exceptions (missing header, bad parameter type, wrong method...) carry their own 4xx status.
+        if (ex instanceof ErrorResponse errorResponse && errorResponse.getStatusCode().is4xxClientError()) {
+            return new ResponseEntity<>(new ErrorDetails(
+                    LocalDateTime.now(),
+                    "The request could not be processed",
+                    request.getDescription(false),
+                    getCorrelationId()
+            ), errorResponse.getStatusCode());
+        }
+        log.error("Unhandled exception", ex);
+        // Never echo the exception message: it can leak SQL, class names or other internals.
         ErrorDetails errorDetails = new ErrorDetails(
                 LocalDateTime.now(),
-                "An unexpected error occurred: " + ex.getMessage(),
+                "An unexpected error occurred",
                 request.getDescription(false),
                 getCorrelationId()
         );

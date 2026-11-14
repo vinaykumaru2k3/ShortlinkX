@@ -19,13 +19,15 @@ public class CorrelationHeaderFilter implements GlobalFilter, Ordered {
         ServerHttpRequest request = exchange.getRequest();
         String correlationId = request.getHeaders().getFirst(TraceConstants.CORRELATION_HEADER);
 
-        if (correlationId == null || correlationId.trim().isEmpty()) {
+        // Only accept well-formed ids from the client; anything else could be used to forge log lines.
+        if (correlationId == null || !correlationId.matches("[A-Za-z0-9-]{1,64}")) {
             correlationId = UUID.randomUUID().toString();
         }
 
         // Propagate header to downstream services
+        final String headerValue = correlationId;
         ServerHttpRequest mutatedRequest = request.mutate()
-                .header(TraceConstants.CORRELATION_HEADER, correlationId)
+                .headers(h -> h.set(TraceConstants.CORRELATION_HEADER, headerValue))
                 .build();
 
         ServerWebExchange mutatedExchange = exchange.mutate()

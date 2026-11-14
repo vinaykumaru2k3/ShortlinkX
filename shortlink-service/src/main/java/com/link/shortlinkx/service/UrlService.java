@@ -11,5 +11,6 @@ public interface UrlService {
 
     String getOriginalUrlAndRecordClick(String shortCode, String ipAddress, String referrer, String userAgent);
 
-    List<ShortUrlResponse> getUrlsByUserId(Long userId);
+    /** Newest first; {@code size} is capped by the implementation. */
+    List<ShortUrlResponse> getUrlsByUserId(Long userId, int page, int size);
 }

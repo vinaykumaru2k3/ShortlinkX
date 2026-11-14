@@ -6,6 +6,7 @@ import org.springframework.cloud.gateway.route.builder.RouteLocatorBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+/** The single source of truth for gateway routes (the YAML file intentionally defines none). */
 @Configuration
 public class GatewayConfig {
 
@@ -21,7 +22,7 @@ public class GatewayConfig {
                 .route("shortlink-service-urls", r -> r.path("/api/v1/urls")
                         .filters(f -> f.circuitBreaker(c -> c.setName("shortlinkServiceCircuitBreaker").setFallbackUri("forward:/fallback/urls")))
                         .uri(shortlinkServiceUri))
-                .route("shortlink-service-redirect", r -> r.path("/api/v1/{shortCode}")
+                .route("shortlink-service-redirect", r -> r.method("GET").and().path("/api/v1/{shortCode:[a-zA-Z0-9]{1,10}}")
                         .uri(shortlinkServiceUri))
                 .build();
     }
