@@ -9,3 +9,10 @@ spring:
       ddl-auto: create-drop
   flyway:
     enabled: false
+
+app:
+  jwt:
+    secret: test-only-secret-that-is-at-least-thirty-two-bytes-long
+    expiration-ms: 3600000
+  rate-limit:
+    enabled: false

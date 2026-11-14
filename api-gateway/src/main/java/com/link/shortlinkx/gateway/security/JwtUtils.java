@@ -4,6 +4,7 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -12,15 +13,27 @@ import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 @Component
 public class JwtUtils {
 
-    @Value("${app.jwt.secret:defaultSecretKeyWithAtLeast256BitsOfEntropy!}")
+    private static final int MIN_SECRET_BYTES = 32;
+
+    /** Required: there is intentionally no default, so a missing secret fails startup. */
+    @Value("${app.jwt.secret}")
     private String jwtSecret;
 
-    @Value("${app.jwt.expiration-ms:86400000}") // 1 day
+    @Value("${app.jwt.expiration-ms:7200000}") // 2 hours
     private long jwtExpirationMs;
+
+    @PostConstruct
+    void validateConfiguration() {
+        if (jwtSecret == null || jwtSecret.getBytes(StandardCharsets.UTF_8).length < MIN_SECRET_BYTES) {
+            throw new IllegalStateException(
+                    "app.jwt.secret (JWT_SECRET) must be set and at least " + MIN_SECRET_BYTES + " bytes long");
+        }
+    }
 
     private SecretKey getSigningKey() {
         return Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
@@ -29,7 +42,7 @@ public class JwtUtils {
     public String generateToken(String username, Long userId) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("userId", userId);
-        
+
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + jwtExpirationMs);
 
@@ -42,35 +55,33 @@ public class JwtUtils {
                 .compact();
     }
 
-    public boolean validateToken(String token) {
+    /** Parses and verifies a token; empty if it is malformed, tampered with or expired. */
+    public Optional<Claims> parse(String token) {
         try {
-            Jwts.parser()
+            return Optional.of(Jwts.parser()
                     .verifyWith(getSigningKey())
                     .build()
-                    .parseSignedClaims(token);
-            return true;
+                    .parseSignedClaims(token)
+                    .getPayload());
         } catch (JwtException | IllegalArgumentException e) {
-            return false;
+            return Optional.empty();
         }
+    }
+
+    public boolean validateToken(String token) {
+        return parse(token).isPresent();
     }
 
     public String getUsernameFromToken(String token) {
-        return getClaims(token).getSubject();
+        return parse(token).map(Claims::getSubject).orElse(null);
     }
 
     public Long getUserIdFromToken(String token) {
-        Object raw = getClaims(token).get("userId");
-        if (raw instanceof Number number) {
-            return number.longValue();
-        }
-        return null;
+        return parse(token).map(JwtUtils::userIdOf).orElse(null);
     }
 
-    private Claims getClaims(String token) {
-        return Jwts.parser()
-                .verifyWith(getSigningKey())
-                .build()
-                .parseSignedClaims(token)
-                .getPayload();
+    public static Long userIdOf(Claims claims) {
+        Object raw = claims.get("userId");
+        return raw instanceof Number number ? number.longValue() : null;
     }
 }

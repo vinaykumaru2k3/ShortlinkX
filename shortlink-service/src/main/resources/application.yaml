@@ -7,39 +7,34 @@ spring:
 
   datasource:
     url: jdbc:postgresql://localhost:5432/shortlinkx
-    username: postgres
-    password: postgres
+    username: ${DB_USERNAME:postgres}
+    # "postgres" is only the stock password of a throwaway local database; docker compose supplies a real one.
+    password: ${DB_PASSWORD:postgres}
     driver-class-name: org.postgresql.Driver
 
   jpa:
     hibernate:
       ddl-auto: none
-    show-sql: true
-    properties:
-      hibernate:
-        format_sql: true
+    open-in-view: false
 
   flyway:
     enabled: true
-    baseline-on-migrate: true
-    baseline-version: 0
-    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/shortlinkx}
-    user: postgres
-    password: postgres
 
   data:
     redis:
       host: localhost
       port: 6379
+      password: ${REDIS_PASSWORD:}
 
 management:
   endpoints:
     web:
       exposure:
-        include: health,info,metrics,prometheus
+        include: health,info
   endpoint:
     health:
-      show-details: always
+      show-details: never
 
 app:
-  short-url-prefix: http://localhost:8080/api/v1/
+  # Public base URL of the gateway's redirect endpoint (must end with a slash).
+  short-url-prefix: ${APP_SHORT_URL_PREFIX:http://localhost:8080/api/v1/}

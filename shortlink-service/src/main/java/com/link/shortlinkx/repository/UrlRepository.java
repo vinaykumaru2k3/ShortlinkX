@@ -1,6 +1,7 @@
 package com.link.shortlinkx.repository;
 
 import com.link.shortlinkx.entity.Url;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -15,10 +16,7 @@ public interface UrlRepository extends JpaRepository<Url, Long> {
 
     Optional<Url> findByShortCode(String shortCode);
 
-    boolean existsByShortCode(String shortCode);
-
-    @Query("SELECT u FROM Url u WHERE u.userId = :userId ORDER BY u.createdAt DESC")
-    List<Url> findAllByUserId(Long userId);
+    List<Url> findByUserIdOrderByCreatedAtDescIdDesc(Long userId, Pageable pageable);
 
     @Modifying
     @Transactional

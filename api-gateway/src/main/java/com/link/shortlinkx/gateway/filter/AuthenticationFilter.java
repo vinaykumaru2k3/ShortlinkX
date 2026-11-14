@@ -1,84 +1,56 @@
 package com.link.shortlinkx.gateway.filter;
 
-import com.link.shortlinkx.gateway.security.JwtUtils;
-import lombok.RequiredArgsConstructor;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.core.Ordered;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.server.reactive.ServerHttpRequest;
-import org.springframework.http.server.reactive.ServerHttpResponse;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.ReactiveSecurityContextHolder;
+import org.springframework.security.core.context.SecurityContext;
 import org.springframework.stereotype.Component;
-import org.springframework.util.AntPathMatcher;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
-import java.util.List;
+import java.util.Optional;
 
+/**
+ * Propagates the identity established by Spring Security to downstream services.
+ * Authentication itself happens in the security filter chain; this filter never decides access.
+ * Identity headers sent by the client are always discarded so they cannot be spoofed.
+ */
 @Component
-@RequiredArgsConstructor
 public class AuthenticationFilter implements GlobalFilter, Ordered {
 
-    private final JwtUtils jwtUtils;
-    private final AntPathMatcher pathMatcher = new AntPathMatcher();
-
-    private final List<String> securedPaths = List.of(
-            "/api/v1/shorten",
-            "/api/v1/urls"
-    );
+    static final String USER_ID_HEADER = "X-User-Id";
+    static final String USER_NAME_HEADER = "X-User-Name";
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
-        ServerHttpRequest request = exchange.getRequest();
-        String path = request.getURI().getPath();
-
-        boolean isSecured = securedPaths.stream()
-                .anyMatch(securedPath -> pathMatcher.match(securedPath, path));
-
-        if (isSecured) {
-            if (request.getMethod() == org.springframework.http.HttpMethod.OPTIONS) {
-                return chain.filter(exchange);
-            }
-
-            String authHeader = request.getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
-            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-                return onError(exchange, "Missing or Invalid Authorization Header", HttpStatus.UNAUTHORIZED);
-            }
-
-            String token = authHeader.substring(7);
-            if (!jwtUtils.validateToken(token)) {
-                return onError(exchange, "Invalid JWT Token", HttpStatus.UNAUTHORIZED);
-            }
-
-            Long userId = jwtUtils.getUserIdFromToken(token);
-            String username = jwtUtils.getUsernameFromToken(token);
-
-            if (userId == null) {
-                return onError(exchange, "JWT is missing userId claim", HttpStatus.UNAUTHORIZED);
-            }
-
-            // Mutate request headers to propagate identity context downstream
-            ServerHttpRequest mutatedRequest = request.mutate()
-                    .header("X-User-Id", String.valueOf(userId))
-                    .header("X-User-Name", username)
-                    .build();
-
-            return chain.filter(exchange.mutate().request(mutatedRequest).build());
-        }
-
-        return chain.filter(exchange);
+        return ReactiveSecurityContextHolder.getContext()
+                .map(SecurityContext::getAuthentication)
+                .filter(auth -> auth instanceof UsernamePasswordAuthenticationToken && auth.isAuthenticated())
+                .map(Optional::of)
+                .defaultIfEmpty(Optional.empty())
+                .flatMap(authentication -> chain.filter(withTrustedHeaders(exchange, authentication.orElse(null))));
     }
 
-    private Mono<Void> onError(ServerWebExchange exchange, String err, HttpStatus status) {
-        ServerHttpResponse response = exchange.getResponse();
-        response.setStatusCode(status);
-        response.getHeaders().add("Error-Message", err);
-        return response.setComplete();
+    private ServerWebExchange withTrustedHeaders(ServerWebExchange exchange, Authentication authentication) {
+        ServerHttpRequest request = exchange.getRequest().mutate().headers(headers -> {
+            headers.remove(USER_ID_HEADER);
+            headers.remove(USER_NAME_HEADER);
+            // The gateway is the edge: a client-supplied X-Forwarded-For must not reach the click analytics.
+            headers.remove("X-Forwarded-For");
+            if (authentication != null && authentication.getDetails() instanceof Long userId) {
+                headers.set(USER_ID_HEADER, String.valueOf(userId));
+                headers.set(USER_NAME_HEADER, String.valueOf(authentication.getPrincipal()));
+            }
+        }).build();
+        return exchange.mutate().request(request).build();
     }
 
     @Override
     public int getOrder() {
-        return Ordered.HIGHEST_PRECEDENCE + 1; // Execute right after correlation ID filter
+        return Ordered.HIGHEST_PRECEDENCE + 1;
     }
 }

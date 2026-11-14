@@ -17,14 +17,19 @@ import java.time.LocalDateTime;
 @Slf4j
 public class AnalyticsService {
 
+    // Must match the column sizes in V2__create_analytics_table.sql, otherwise the insert fails.
+    private static final int MAX_IP = 45;
+    private static final int MAX_REFERRER = 1024;
+    private static final int MAX_USER_AGENT = 512;
+
     private final AnalyticsRepository analyticsRepository;
     private final UrlRepository urlRepository;
 
     @Async("taskExecutor")
     @Transactional
     public void recordClick(String shortCode, String ipAddress, String referrer, String userAgent) {
-        log.info("Asynchronously logging click telemetry and incrementing count for shortCode: {}", shortCode);
-        
+        log.debug("Recording click telemetry for shortCode: {}", shortCode);
+
         try {
             // 1. Increment click count in urls table
             urlRepository.incrementClickCount(shortCode);
@@ -33,16 +38,20 @@ public class AnalyticsService {
             Analytics analytics = Analytics.builder()
                     .shortCode(shortCode)
                     .clickTimestamp(LocalDateTime.now())
-                    .ipAddress(ipAddress != null ? ipAddress : "0.0.0.0")
-                    .referrer(referrer != null ? referrer : "Direct")
-                    .userAgent(userAgent)
+                    .ipAddress(truncate(ipAddress != null ? ipAddress : "0.0.0.0", MAX_IP))
+                    .referrer(truncate(referrer != null ? referrer : "Direct", MAX_REFERRER))
+                    .userAgent(truncate(userAgent, MAX_USER_AGENT))
                     .operatingSystem(UserAgentParser.parseOS(userAgent))
                     .browser(UserAgentParser.parseBrowser(userAgent))
                     .build();
 
             analyticsRepository.save(analytics);
         } catch (Exception e) {
-            log.error("Failed to asynchronously save analytics or increment click count for shortCode: {}", shortCode, e);
+            log.error("Failed to save analytics or increment click count for shortCode: {}", shortCode, e);
         }
+    }
+
+    static String truncate(String value, int max) {
+        return value != null && value.length() > max ? value.substring(0, max) : value;
     }
 }
